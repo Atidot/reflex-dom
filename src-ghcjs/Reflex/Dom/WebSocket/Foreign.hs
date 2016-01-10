@@ -1,11 +1,11 @@
-{-# LANGUAGE ForeignFunctionInterface, JavaScriptFFI, CPP #-}
+{-# LANGUAGE ForeignFunctionInterface, JavaScriptFFI, CPP, ScopedTypeVariables #-}
 
 module Reflex.Dom.WebSocket.Foreign where
 
 import Prelude hiding (div, span, mapM, mapM_, concat, concatMap, all, sequence)
 
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import GHCJS.Types
 import GHCJS.DOM.WebSocket (message, open, closeEvent)
 import qualified GHCJS.DOM.WebSocket as GD
@@ -28,8 +28,8 @@ newWebSocket _ url onMessage onOpen onClose = do
   _ <- on ws message $ do
     e <- ask
     d <- getData e
-    ab <- liftIO $ unsafeFreeze $ pFromJSVal d
-    liftIO $ onMessage $ toByteString 0 Nothing $ createFromArrayBuffer ab
+    let (msgString :: String) = pFromJSVal d
+    liftIO . onMessage . BS.pack $ msgString
   _ <- on ws closeEvent $ liftIO onClose
   return $ JSWebSocket ws
 
